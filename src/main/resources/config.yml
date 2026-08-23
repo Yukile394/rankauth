@@ -3,10 +3,10 @@
 auth:
   registration-time-seconds: 180
   login-time-seconds: 180
-  minimum-password-length: 10
-  require-uppercase: true
-  require-lowercase: true
-  require-number: true
+  minimum-password-length: 8
+  require-uppercase: false
+  require-lowercase: false
+  require-number: false
   max-failed-login-attempts: 5
   failed-login-lockout-seconds: 60
 
@@ -51,7 +51,7 @@ music:
 welcome:
   lines:
     - ""
-    - "&#FFA500&l         SILVERA SUNUCUSUNA HOŞ GELDİN"
+    - "&#FFA500         SILVERA SUNUCUSUNA HOŞ GELDİN"
     - ""
     - "&#FFFFFFBuraya ilk defa geliyorsun, önce hesabını oluşturman gerekiyor."
     - "&#FFB6C1- &#FFFFFFAşağıya bir şifre yaz ve sohbete gönder."
@@ -79,7 +79,7 @@ session:
 # turuncu &#FFA500 (hata/dikkat).
 messages:
   prefix: "&#FFA500Silvera"
-  weak-password: "&#FFB6C1Şifreniz çok zayıf."
+  weak-password: "&#FFB6C1Şifreniz çok düşük, en az 8 karakter olmalı."
   password-mismatch: "&#FFB6C1Şifreler eşleşmiyor."
   wrong-password: "&#FFB6C1Şifre yanlış."
   verification-sent: "&#FFFFFFDoğrulama kodu e-posta adresinize gönderildi."
