@@ -1,0 +1,31 @@
+name: RankAuth
+version: '${version}'
+main: com.rankauth.RankAuthPlugin
+api-version: '1.21'
+description: Registration, login, and OP IP-lock security plugin.
+author: RankAuth
+depend: []
+softdepend: [HubShat]
+
+commands:
+  register:
+    description: Register a new account.
+    usage: /register <password> <password>
+  login:
+    description: Log in to your account.
+    usage: /login <password>
+  opsistemikaldir:
+    description: Remove a trusted IP lock from an OP account.
+    usage: /opsistemikaldir <player>
+    permission: rankauth.opsistemikaldir
+  rankauth:
+    description: RankAuth admin command (reload).
+    usage: /rankauth reload
+
+permissions:
+  rankauth.admin:
+    default: op
+  rankauth.opsistemikaldir:
+    default: op
+  rankauth.reload:
+    default: op
