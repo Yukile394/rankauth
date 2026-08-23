@@ -43,6 +43,10 @@ public final class SessionManager {
         if (session.bossBar instanceof BossBar bossBar) {
             bossBar.removeAll();
         }
+        if (session.musicTask != null) {
+            session.musicTask.cancel();
+            session.musicTask = null;
+        }
     }
 
     public void cancelAll() {
