@@ -57,7 +57,10 @@ public final class AuthManager {
                 PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_PASSWORD);
                 session.stage = AuthStage.AWAITING_PASSWORD;
                 session.safeLocation = safeLoc;
+                placeBarrier(session, safeLoc);
+                startAmbientMusic(player, session);
                 startTimeout(player, session, config.registrationTimeSeconds());
+                sendWelcomeScreen(player);
                 player.sendMessage(ChatColor.YELLOW + "Şifre belirle:");
                 return;
             }
@@ -83,6 +86,8 @@ public final class AuthManager {
             PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_LOGIN);
             session.stage = AuthStage.AWAITING_LOGIN;
             session.safeLocation = safeLoc;
+            placeBarrier(session, safeLoc);
+            startAmbientMusic(player, session);
             startTimeout(player, session, config.loginTimeSeconds());
             player.sendMessage(ChatColor.YELLOW + "Giriş yapmak için: " + ChatColor.WHITE + "/login <şifre>");
         }));
@@ -93,6 +98,69 @@ public final class AuthManager {
         double safeY = (world.getEnvironment() == World.Environment.NETHER) ? 120 : 320;
         safeY = Math.min(safeY, world.getMaxHeight() - 5);
         return new Location(world, player.getLocation().getX(), safeY, player.getLocation().getZ());
+    }
+
+    /** Sends the colored first-join / auth instructions screen. */
+    private void sendWelcomeScreen(Player player) {
+        for (String line : config.welcomeLines()) {
+            player.sendMessage(line);
+        }
+    }
+
+    /**
+     * Places an invisible barrier block beneath the player's safe (in-air) auth
+     * location so they cannot fall while restricted, and remembers whatever was
+     * there before so it can be restored once authentication finishes.
+     */
+    private void placeBarrier(PlayerSession session, Location safeLoc) {
+        org.bukkit.block.Block block = safeLoc.clone().subtract(0, 1, 0).getBlock();
+        session.barrierLocation = block.getLocation();
+        session.barrierPreviousType = block.getType();
+        block.setType(org.bukkit.Material.BARRIER, false);
+    }
+
+    /** Restores the block beneath the player once they're authenticated. */
+    private void releaseBarrier(PlayerSession session) {
+        if (session.barrierLocation != null) {
+            org.bukkit.Material previous = session.barrierPreviousType != null
+                    ? session.barrierPreviousType : org.bukkit.Material.AIR;
+            session.barrierLocation.getBlock().setType(previous, false);
+            session.barrierLocation = null;
+            session.barrierPreviousType = null;
+        }
+    }
+
+    /** Loops a calming sound for the player until they finish registering/logging in. */
+    private void startAmbientMusic(Player player, PlayerSession session) {
+        if (!config.musicEnabled()) return;
+        if (session.musicTask != null) return;
+        org.bukkit.Sound sound;
+        try {
+            sound = org.bukkit.Sound.valueOf(config.musicSound()
+                    .replace("minecraft:", "").toUpperCase(java.util.Locale.ROOT).replace('.', '_'));
+        } catch (IllegalArgumentException ex) {
+            sound = org.bukkit.Sound.MUSIC_DISC_CAT;
+        }
+        final org.bukkit.Sound finalSound = sound;
+        long periodTicks = Math.max(20L, config.musicLoopSeconds() * 20L);
+        Runnable play = () -> {
+            if (player.isOnline()) {
+                player.playSound(player.getLocation(), finalSound, org.bukkit.SoundCategory.MUSIC,
+                        config.musicVolume(), config.musicPitch());
+            }
+        };
+        play.run();
+        session.musicTask = Bukkit.getScheduler().runTaskTimer(plugin, play, periodTicks, periodTicks);
+    }
+
+    private void stopAmbientMusic(Player player, PlayerSession session) {
+        if (session.musicTask != null) {
+            session.musicTask.cancel();
+            session.musicTask = null;
+        }
+        if (player.isOnline()) {
+            player.stopSound(org.bukkit.SoundCategory.MUSIC);
+        }
     }
 
     private void startTimeout(Player player, PlayerSession session, int seconds) {
@@ -313,6 +381,8 @@ public final class AuthManager {
 
     private void finishAuth(Player player, PlayerSession session, String successMessage) {
         sessions.cancelTasks(session);
+        stopAmbientMusic(player, session);
+        releaseBarrier(session);
         session.stage = AuthStage.AUTHENTICATED;
         session.failedAttempts = 0;
         if (successMessage != null) {
@@ -320,6 +390,14 @@ public final class AuthManager {
         }
         com.rankauth.util.TabVisibility.restoreVisibility(plugin, player);
         hub.sendToHub(player);
+    }
+
+    /** Cleans up barrier blocks/music left over if a restricted player disconnects mid-auth. */
+    public void handleQuit(Player player) {
+        PlayerSession session = sessions.get(player.getUniqueId());
+        if (session != null && session.isRestricted()) {
+            releaseBarrier(session);
+        }
     }
 
     public void removeOpIpLock(org.bukkit.command.CommandSender admin, Player target) {
@@ -335,4 +413,5 @@ public final class AuthManager {
     public SessionManager getSessions() {
         return sessions;
     }
-    }
+                                 }
+            
