@@ -48,8 +48,8 @@ public final class RankAuthPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RestrictionListener(sessionManager, configManager), this);
         getServer().getPluginManager().registerEvents(new ChatListener(authManager, sessionManager), this);
 
-        getCommand("register").setExecutor(new RegisterCommand(authManager));
-        getCommand("login").setExecutor(new LoginCommand(authManager));
+        getCommand("register").setExecutor(new RegisterCommand(authManager, configManager));
+        getCommand("login").setExecutor(new LoginCommand(authManager, configManager));
         getCommand("opsistemikaldir").setExecutor(new OpSistemiKaldirCommand(authManager));
         getCommand("rankauth").setExecutor(new RankAuthCommand(this, configManager));
 
