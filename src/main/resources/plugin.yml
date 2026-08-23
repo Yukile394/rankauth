@@ -10,7 +10,10 @@ softdepend: [HubShat]
 commands:
   register:
     description: Register a new account.
-    usage: /register <password> <password>
+    usage: /register <password> <email>
+  kod:
+    description: Confirm the verification code emailed to you.
+    usage: /kod <code>
   login:
     description: Log in to your account.
     usage: /login <password>
