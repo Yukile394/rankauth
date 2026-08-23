@@ -34,6 +34,35 @@ smtp:
   from-name: RankAuth
   subject: "Doğrulama Kodu"
 
+# Kayıt/giriş ekranında oynayan sakinleştirici arkaplan müziği.
+# Oyuncu kayıt/giriş olana kadar döngüde çalar, authenticated olunca durur.
+music:
+  enabled: true
+  # Herhangi bir Minecraft ses kaydı (sakin olanlar): minecraft:music_disc.cat,
+  # minecraft:music_disc.far, minecraft:music.overworld.forest ...
+  sound: "minecraft:music_disc.cat"
+  volume: 0.6
+  pitch: 1.0
+  # Sesin uzunluğu (saniye) - süre dolunca otomatik yeniden başlar.
+  loop-seconds: 185
+
+# İlk girişte (kayıt tamamlanana kadar) oyuncuya gösterilen bilgilendirme ekranı.
+# Renkler: beyaz &#FFFFFF, açık pembe &#FFB6C1, turuncu &#FFA500
+welcome:
+  lines:
+    - ""
+    - "&#FFA500&l         SILVERA SUNUCUSUNA HOŞ GELDİN"
+    - ""
+    - "&#FFFFFFBuraya ilk defa geliyorsun, önce hesabını oluşturman gerekiyor."
+    - "&#FFB6C1- &#FFFFFFAşağıya bir şifre yaz ve sohbete gönder."
+    - "&#FFB6C1- &#FFFFFFAynı şifreyi tekrar yazarak onayla."
+    - "&#FFB6C1- &#FFFFFFGeçerli bir e-posta adresi gir."
+    - "&#FFB6C1- &#FFFFFFE-postana gelen 6 haneli kodu sohbete yaz."
+    - ""
+    - "&#FFA500Kayıt tamamlanana kadar hareket edemez ve düşemezsin,"
+    - "&#FFA500altında görünmez bir koruma bloğu var."
+    - ""
+
 hub:
   command: "hub"
 
@@ -46,17 +75,19 @@ session:
   # Saniye cinsinden. 10800 = 3 saat.
   duration: 10800
 
+# Renk paleti: beyaz &#FFFFFF (normal metin), açık pembe &#FFB6C1 (vurgu/uyarı),
+# turuncu &#FFA500 (hata/dikkat).
 messages:
-  prefix: "Silvera"
-  weak-password: "&cŞifreniz çok zayıf."
-  password-mismatch: "&cŞifreler eşleşmiyor."
-  wrong-password: "&cŞifre yanlış."
-  verification-sent: "&aDoğrulama kodu e-posta adresinize gönderildi."
-  wrong-code: "&cDoğrulama kodu yanlış."
-  invalid-email: "&cGeçerli bir e-posta adresi girin."
-  need-login: "&cÖnce giriş yapmanız gerekiyor."
-  need-register: "&cÖnce kayıt işlemini tamamlamanız gerekiyor."
-  op-ip-locked: "&cBu OP hesabına kayıtlı IP adresinden giriş yapmanız gerekiyor."
-  registration-timeout: "&cKayıt süresi doldu. Sunucudan çıkarılıyorsunuz."
-  rate-limited: "&cÇok fazla yanlış deneme. Lütfen biraz sonra tekrar deneyin."
-  duplicate-connection: "&cBu kullanıcı adı şu anda sunucuda kullanımda."
+  prefix: "&#FFA500Silvera"
+  weak-password: "&#FFB6C1Şifreniz çok zayıf."
+  password-mismatch: "&#FFB6C1Şifreler eşleşmiyor."
+  wrong-password: "&#FFB6C1Şifre yanlış."
+  verification-sent: "&#FFFFFFDoğrulama kodu e-posta adresinize gönderildi."
+  wrong-code: "&#FFB6C1Doğrulama kodu yanlış."
+  invalid-email: "&#FFB6C1Geçerli bir e-posta adresi girin."
+  need-login: "&#FFB6C1Önce giriş yapmanız gerekiyor."
+  need-register: "&#FFB6C1Önce kayıt işlemini tamamlamanız gerekiyor."
+  op-ip-locked: "&#FFA500Bu OP hesabına kayıtlı IP adresinden giriş yapmanız gerekiyor."
+  registration-timeout: "&#FFA500Kayıt süresi doldu. Sunucudan çıkarılıyorsunuz."
+  rate-limited: "&#FFA500Çok fazla yanlış deneme. Lütfen biraz sonra tekrar deneyin."
+  duplicate-connection: "&#FFA500Bu kullanıcı adı şu anda sunucuda kullanımda."
