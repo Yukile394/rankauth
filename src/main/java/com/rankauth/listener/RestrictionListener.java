@@ -79,8 +79,7 @@ public final class RestrictionListener implements Listener {
         if (!ALLOWED_COMMANDS.contains(base)) {
             event.setCancelled(true);
             boolean everRegistered = session.stage.name().equals("AWAITING_LOGIN");
-            player.sendMessage(org.bukkit.ChatColor.RED +
-                    (everRegistered ? config.message("need-login") : config.message("need-register")));
+            player.sendMessage(everRegistered ? config.message("need-login") : config.message("need-register"));
         }
     }
 }
