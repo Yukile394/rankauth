@@ -53,8 +53,8 @@ public final class AuthManager {
             com.rankauth.util.TabVisibility.hideFromEveryone(plugin, player);
 
             if (accountOpt.isEmpty()) {
-                PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_PASSWORD);
-                session.stage = AuthStage.AWAITING_PASSWORD;
+                PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_REGISTER);
+                session.stage = AuthStage.AWAITING_REGISTER;
                 session.safeLocation = safeLoc;
                 placeBarrier(session, safeLoc);
                 startAmbientMusic(player, session);
@@ -62,7 +62,7 @@ public final class AuthManager {
                 if (!player.isOp()) {
                     sendWelcomeScreen(player);
                 }
-                player.sendMessage(config.message("password-prompt"));
+                player.sendMessage(config.message("register-prompt"));
                 return;
             }
 
@@ -179,52 +179,26 @@ public final class AuthManager {
                 });
     }
 
-    public boolean handleChatInput(Player player, String message) {
+    /** /register <şifre> <email> — validates, hashes, sends the verification code, moves to AWAITING_CODE. */
+    public void handleRegisterCommand(Player player, String password, String emailAddress) {
         PlayerSession session = sessions.get(player.getUniqueId());
-        if (session == null || session.stage == AuthStage.AUTHENTICATED) {
-            return false;
+        if (session == null || session.stage == AuthStage.AWAITING_LOGIN || session.stage == AuthStage.AUTHENTICATED) {
+            player.sendMessage(config.message("need-register"));
+            return;
         }
-
-        switch (session.stage) {
-            case AWAITING_PASSWORD -> handlePasswordEntry(player, session, message);
-            case AWAITING_PASSWORD_CONFIRM -> handlePasswordConfirm(player, session, message);
-            case AWAITING_EMAIL -> handleEmailEntry(player, session, message);
-            case AWAITING_CODE -> handleCodeEntry(player, session, message);
-            case AWAITING_LOGIN -> player.sendMessage(config.message("login-prompt"));
-            default -> {}
-        }
-        return true;
-    }
-
-    private void handlePasswordEntry(Player player, PlayerSession session, String password) {
         String invalidReason = PasswordUtil.validate(password, config);
         if (invalidReason != null) {
             player.sendMessage(config.message("weak-password"));
             return;
         }
-        session.pendingPasswordHash = PasswordUtil.hash(password);
-        session.stage = AuthStage.AWAITING_PASSWORD_CONFIRM;
-        player.sendMessage(config.message("password-confirm-prompt"));
-    }
-
-    private void handlePasswordConfirm(Player player, PlayerSession session, String password) {
-        if (!PasswordUtil.matches(password, session.pendingPasswordHash)) {
-            player.sendMessage(config.message("password-mismatch"));
-            session.pendingPasswordHash = null;
-            session.stage = AuthStage.AWAITING_PASSWORD;
-            player.sendMessage(config.message("password-prompt"));
-            return;
-        }
-        session.stage = AuthStage.AWAITING_EMAIL;
-        player.sendMessage(config.message("email-prompt"));
-    }
-
-    private void handleEmailEntry(Player player, PlayerSession session, String emailAddress) {
         if (!EMAIL_PATTERN.matcher(emailAddress).matches()) {
             player.sendMessage(config.message("invalid-email"));
             return;
         }
+
+        session.pendingPasswordHash = PasswordUtil.hash(password);
         session.pendingEmail = emailAddress;
+
         String code = CodeGenerator.generateNumericCode(config.verificationCodeLength());
         String codeHash = CodeGenerator.hashCode(code);
         long expiresAt = System.currentTimeMillis() + (config.verificationExpirationSeconds() * 1000L);
@@ -235,7 +209,6 @@ public final class AuthManager {
                     if (!player.isOnline()) return;
                     if (err != null) {
                         player.sendMessage(config.message("email-send-failed"));
-                        session.stage = AuthStage.AWAITING_EMAIL;
                         return;
                     }
                     session.stage = AuthStage.AWAITING_CODE;
@@ -244,7 +217,13 @@ public final class AuthManager {
                 }));
     }
 
-    private void handleCodeEntry(Player player, PlayerSession session, String code) {
+    /** /kod <kod> — verifies the code that was emailed and finalizes registration. */
+    public void handleKodCommand(Player player, String code) {
+        PlayerSession session = sessions.get(player.getUniqueId());
+        if (session == null || session.stage != AuthStage.AWAITING_CODE) {
+            player.sendMessage(config.message("need-register"));
+            return;
+        }
         db.getVerificationEntry(player.getUniqueId()).whenComplete((entryOpt, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
             if (err != null || entryOpt.isEmpty()) {
@@ -254,7 +233,7 @@ public final class AuthManager {
             DatabaseManager.VerificationEntry entry = entryOpt.get();
             if (System.currentTimeMillis() > entry.expiresAt) {
                 player.sendMessage(config.message("code-expired"));
-                session.stage = AuthStage.AWAITING_EMAIL;
+                session.stage = AuthStage.AWAITING_REGISTER;
                 return;
             }
             if (!CodeGenerator.matches(code, entry.codeHash)) {
@@ -282,26 +261,6 @@ public final class AuthManager {
                     }
                     finishAuth(player, session, config.message("register-success"));
                 }));
-    }
-
-    public void handleRegisterCommand(Player player, String password1, String password2) {
-        PlayerSession session = sessions.get(player.getUniqueId());
-        if (session == null || session.stage == AuthStage.AWAITING_LOGIN || session.stage == AuthStage.AUTHENTICATED) {
-            player.sendMessage(config.message("need-register"));
-            return;
-        }
-        if (!password1.equals(password2)) {
-            player.sendMessage(config.message("password-mismatch"));
-            return;
-        }
-        String invalidReason = PasswordUtil.validate(password1, config);
-        if (invalidReason != null) {
-            player.sendMessage(config.message("weak-password"));
-            return;
-        }
-        session.pendingPasswordHash = PasswordUtil.hash(password1);
-        session.stage = AuthStage.AWAITING_EMAIL;
-        player.sendMessage(config.message("email-prompt"));
     }
 
     public void handleLoginCommand(Player player, String password) {
@@ -414,5 +373,4 @@ public final class AuthManager {
     public SessionManager getSessions() {
         return sessions;
     }
-    }
-        
+                                              }
