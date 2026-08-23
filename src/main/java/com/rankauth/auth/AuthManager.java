@@ -60,7 +60,9 @@ public final class AuthManager {
                 placeBarrier(session, safeLoc);
                 startAmbientMusic(player, session);
                 startTimeout(player, session, config.registrationTimeSeconds());
-                sendWelcomeScreen(player);
+                if (!player.isOp()) {
+                    sendWelcomeScreen(player);
+                }
                 player.sendMessage(ChatColor.YELLOW + "Şifre belirle:");
                 return;
             }
@@ -413,5 +415,5 @@ public final class AuthManager {
     public SessionManager getSessions() {
         return sessions;
     }
-                                 }
-            
+                        }
+                               
