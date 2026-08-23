@@ -131,22 +131,28 @@ then
     die "xargs is not available"
 fi
 
-# Use "xargs" to parse quoted args.
-#
-# With -n1 it outputs one arg per line, with the quotes and backslashes removed.
-#
-# In Bash we could simply go:
-#
-#   readarray ARGS < <( xargs -n1 <<<"$var" ) &&
-#   set -- "${ARGS[@]}" "$@"
-#
-# but POSIX shell has neither arrays nor command substitution that preserves
-# newlines, and echo does not preserve leading zeros in numbers or spaces.
+# Prepend DEFAULT_JVM_OPTS/JAVA_OPTS/GRADLE_OPTS to the already-built argument
+# list. We avoid `eval "set -- $(...)"` here: some shells misparse embedded
+# newlines from multi-line command substitution as separate commands instead
+# of word-splitting them, which breaks JVM flags like "-Xms64m".
+save_args () {
+    for a; do
+        printf '%s\n' "$a"
+    done
+}
+REST_ARGS=$(save_args "$@")
 
-eval "set -- $(
-        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
-        xargs -n1 |
-        sed ' s~^~"~; s~$~"~; '
-    ) '"$@"'"
+set --
+while IFS= read -r opt; do
+    [ -n "$opt" ] && set -- "$@" "$opt"
+done <<JVM_OPTS_HEREDOC
+$(printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" | xargs -n1)
+JVM_OPTS_HEREDOC
+
+while IFS= read -r a; do
+    set -- "$@" "$a"
+done <<REST_ARGS_HEREDOC
+$REST_ARGS
+REST_ARGS_HEREDOC
 
 exec "$JAVACMD" "$@"
