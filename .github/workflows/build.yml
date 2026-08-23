@@ -23,8 +23,6 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
