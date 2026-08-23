@@ -1,15 +1,11 @@
 package com.rankauth.auth;
 
 public enum AuthStage {
-    /** Brand-new player, needs to set a password. */
-    AWAITING_PASSWORD,
-    /** Password just entered once, needs to be repeated. */
-    AWAITING_PASSWORD_CONFIRM,
-    /** Password confirmed, needs an email address. */
-    AWAITING_EMAIL,
-    /** Email submitted, needs the 6-digit code. */
+    /** Brand-new player, needs to run /register <şifre> <email>. */
+    AWAITING_REGISTER,
+    /** Password + email submitted, needs to run /kod <kod>. */
     AWAITING_CODE,
-    /** Registered previously, needs to run /login. */
+    /** Registered previously, needs to run /login <şifre>. */
     AWAITING_LOGIN,
     /** Fully authenticated, unrestricted. */
     AUTHENTICATED
