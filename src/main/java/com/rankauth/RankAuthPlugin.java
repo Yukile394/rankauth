@@ -2,7 +2,6 @@ package com.rankauth;
 
 import com.rankauth.auth.AuthManager;
 import com.rankauth.auth.SessionManager;
-import com.rankauth.command.KodCommand;
 import com.rankauth.command.LoginCommand;
 import com.rankauth.command.OpSistemiKaldirCommand;
 import com.rankauth.command.RankAuthCommand;
@@ -48,7 +47,6 @@ public final class RankAuthPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RestrictionListener(sessionManager, configManager), this);
 
         getCommand("register").setExecutor(new RegisterCommand(authManager, configManager));
-        getCommand("kod").setExecutor(new KodCommand(authManager, configManager));
         getCommand("login").setExecutor(new LoginCommand(authManager, configManager));
         getCommand("opsistemikaldir").setExecutor(new OpSistemiKaldirCommand(authManager));
         getCommand("rankauth").setExecutor(new RankAuthCommand(this, configManager));
