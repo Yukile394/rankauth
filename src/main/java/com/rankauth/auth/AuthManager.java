@@ -9,7 +9,6 @@ import com.rankauth.model.PlayerAccount;
 import com.rankauth.security.CodeGenerator;
 import com.rankauth.security.PasswordUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.boss.BossBar;
@@ -63,7 +62,7 @@ public final class AuthManager {
                 if (!player.isOp()) {
                     sendWelcomeScreen(player);
                 }
-                player.sendMessage(ChatColor.YELLOW + "Şifre belirle:");
+                player.sendMessage(config.message("password-prompt"));
                 return;
             }
 
@@ -91,7 +90,7 @@ public final class AuthManager {
             placeBarrier(session, safeLoc);
             startAmbientMusic(player, session);
             startTimeout(player, session, config.loginTimeSeconds());
-            player.sendMessage(ChatColor.YELLOW + "Giriş yapmak için: " + ChatColor.WHITE + "/login <şifre>");
+            player.sendMessage(config.message("login-prompt"));
         }));
     }
 
@@ -191,7 +190,7 @@ public final class AuthManager {
             case AWAITING_PASSWORD_CONFIRM -> handlePasswordConfirm(player, session, message);
             case AWAITING_EMAIL -> handleEmailEntry(player, session, message);
             case AWAITING_CODE -> handleCodeEntry(player, session, message);
-            case AWAITING_LOGIN -> player.sendMessage(ChatColor.YELLOW + "Giriş yapmak için: /login <şifre>");
+            case AWAITING_LOGIN -> player.sendMessage(config.message("login-prompt"));
             default -> {}
         }
         return true;
@@ -200,29 +199,29 @@ public final class AuthManager {
     private void handlePasswordEntry(Player player, PlayerSession session, String password) {
         String invalidReason = PasswordUtil.validate(password, config);
         if (invalidReason != null) {
-            player.sendMessage(ChatColor.RED + config.message("weak-password"));
+            player.sendMessage(config.message("weak-password"));
             return;
         }
         session.pendingPasswordHash = PasswordUtil.hash(password);
         session.stage = AuthStage.AWAITING_PASSWORD_CONFIRM;
-        player.sendMessage(ChatColor.YELLOW + "Şifrenizi tekrar girin:");
+        player.sendMessage(config.message("password-confirm-prompt"));
     }
 
     private void handlePasswordConfirm(Player player, PlayerSession session, String password) {
         if (!PasswordUtil.matches(password, session.pendingPasswordHash)) {
-            player.sendMessage(ChatColor.RED + config.message("password-mismatch"));
+            player.sendMessage(config.message("password-mismatch"));
             session.pendingPasswordHash = null;
             session.stage = AuthStage.AWAITING_PASSWORD;
-            player.sendMessage(ChatColor.YELLOW + "Şifre belirle:");
+            player.sendMessage(config.message("password-prompt"));
             return;
         }
         session.stage = AuthStage.AWAITING_EMAIL;
-        player.sendMessage(ChatColor.YELLOW + "Güvenlik için e-posta adresinizi girin:");
+        player.sendMessage(config.message("email-prompt"));
     }
 
     private void handleEmailEntry(Player player, PlayerSession session, String emailAddress) {
         if (!EMAIL_PATTERN.matcher(emailAddress).matches()) {
-            player.sendMessage(ChatColor.RED + config.message("invalid-email"));
+            player.sendMessage(config.message("invalid-email"));
             return;
         }
         session.pendingEmail = emailAddress;
@@ -235,13 +234,13 @@ public final class AuthManager {
                 .whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) return;
                     if (err != null) {
-                        player.sendMessage(ChatColor.RED + "Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin.");
+                        player.sendMessage(config.message("email-send-failed"));
                         session.stage = AuthStage.AWAITING_EMAIL;
                         return;
                     }
                     session.stage = AuthStage.AWAITING_CODE;
-                    player.sendMessage(ChatColor.GREEN + config.message("verification-sent"));
-                    player.sendMessage(ChatColor.YELLOW + "Kodu chat üzerinden girin:");
+                    player.sendMessage(config.message("verification-sent"));
+                    player.sendMessage(config.message("code-prompt"));
                 }));
     }
 
@@ -249,17 +248,17 @@ public final class AuthManager {
         db.getVerificationEntry(player.getUniqueId()).whenComplete((entryOpt, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
             if (err != null || entryOpt.isEmpty()) {
-                player.sendMessage(ChatColor.RED + config.message("wrong-code"));
+                player.sendMessage(config.message("wrong-code"));
                 return;
             }
             DatabaseManager.VerificationEntry entry = entryOpt.get();
             if (System.currentTimeMillis() > entry.expiresAt) {
-                player.sendMessage(ChatColor.RED + "Doğrulama kodunun süresi doldu. Lütfen tekrar deneyin.");
+                player.sendMessage(config.message("code-expired"));
                 session.stage = AuthStage.AWAITING_EMAIL;
                 return;
             }
             if (!CodeGenerator.matches(code, entry.codeHash)) {
-                player.sendMessage(ChatColor.RED + config.message("wrong-code"));
+                player.sendMessage(config.message("wrong-code"));
                 return;
             }
             completeRegistration(player, session);
@@ -277,49 +276,49 @@ public final class AuthManager {
                 .whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) return;
                     if (err != null) {
-                        player.sendMessage(ChatColor.RED + "Kayıt tamamlanamadı, lütfen tekrar deneyin.");
+                        player.sendMessage(config.message("register-failed"));
                         plugin.getLogger().warning("Failed to finalize registration for " + player.getName());
                         return;
                     }
-                    finishAuth(player, session, "&aKayıt başarıyla tamamlandı!");
+                    finishAuth(player, session, config.message("register-success"));
                 }));
     }
 
     public void handleRegisterCommand(Player player, String password1, String password2) {
         PlayerSession session = sessions.get(player.getUniqueId());
         if (session == null || session.stage == AuthStage.AWAITING_LOGIN || session.stage == AuthStage.AUTHENTICATED) {
-            player.sendMessage(ChatColor.RED + config.message("need-register"));
+            player.sendMessage(config.message("need-register"));
             return;
         }
         if (!password1.equals(password2)) {
-            player.sendMessage(ChatColor.RED + config.message("password-mismatch"));
+            player.sendMessage(config.message("password-mismatch"));
             return;
         }
         String invalidReason = PasswordUtil.validate(password1, config);
         if (invalidReason != null) {
-            player.sendMessage(ChatColor.RED + config.message("weak-password"));
+            player.sendMessage(config.message("weak-password"));
             return;
         }
         session.pendingPasswordHash = PasswordUtil.hash(password1);
         session.stage = AuthStage.AWAITING_EMAIL;
-        player.sendMessage(ChatColor.YELLOW + "Güvenlik için e-posta adresinizi girin:");
+        player.sendMessage(config.message("email-prompt"));
     }
 
     public void handleLoginCommand(Player player, String password) {
         PlayerSession session = sessions.get(player.getUniqueId());
         if (session == null || session.stage != AuthStage.AWAITING_LOGIN) {
-            player.sendMessage(ChatColor.RED + config.message("need-login"));
+            player.sendMessage(config.message("need-login"));
             return;
         }
         if (session.lockedUntil > System.currentTimeMillis()) {
-            player.sendMessage(ChatColor.RED + config.message("rate-limited"));
+            player.sendMessage(config.message("rate-limited"));
             return;
         }
 
         db.getAccount(player.getUniqueId()).whenComplete((accountOpt, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
             if (err != null || accountOpt.isEmpty()) {
-                player.sendMessage(ChatColor.RED + config.message("wrong-password"));
+                player.sendMessage(config.message("wrong-password"));
                 return;
             }
             PlayerAccount account = accountOpt.get();
@@ -340,9 +339,9 @@ public final class AuthManager {
         if (session.failedAttempts >= config.maxFailedLoginAttempts()) {
             session.lockedUntil = System.currentTimeMillis() + (config.failedLoginLockoutSeconds() * 1000L);
             session.failedAttempts = 0;
-            player.sendMessage(ChatColor.RED + config.message("rate-limited"));
+            player.sendMessage(config.message("rate-limited"));
         } else {
-            player.sendMessage(ChatColor.RED + config.message("wrong-password"));
+            player.sendMessage(config.message("wrong-password"));
         }
     }
 
@@ -357,7 +356,7 @@ public final class AuthManager {
             if (!player.isOnline()) return;
             if (err != null) {
                 plugin.getLogger().warning("OP IP lookup failed for " + player.getName() + ", denying login as a safe default.");
-                player.sendMessage(ChatColor.RED + "Güvenlik kontrolü başarısız oldu, tekrar deneyin.");
+                player.sendMessage(config.message("op-check-failed"));
                 return;
             }
             Optional<OpIpRecord> record = recordOpt;
@@ -367,7 +366,7 @@ public final class AuthManager {
                 return;
             }
             if (!record.get().trustedIp.equals(currentIp)) {
-                player.sendMessage(ChatColor.RED + config.message("op-ip-locked"));
+                player.sendMessage(config.message("op-ip-locked"));
                 return;
             }
             finalizeLogin(player, session, account);
@@ -388,7 +387,7 @@ public final class AuthManager {
         session.stage = AuthStage.AUTHENTICATED;
         session.failedAttempts = 0;
         if (successMessage != null) {
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', successMessage));
+            player.sendMessage(successMessage);
         }
         com.rankauth.util.TabVisibility.restoreVisibility(plugin, player);
         hub.sendToHub(player);
@@ -405,15 +404,15 @@ public final class AuthManager {
     public void removeOpIpLock(org.bukkit.command.CommandSender admin, Player target) {
         db.removeOpIpRecord(target.getUniqueId()).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (err != null) {
-                admin.sendMessage(ChatColor.RED + "İşlem sırasında bir hata oluştu.");
+                admin.sendMessage(com.rankauth.util.ColorUtil.translate("&#FFA500İşlem sırasında bir hata oluştu."));
                 return;
             }
-            admin.sendMessage(ChatColor.GREEN + target.getName() + " için kayıtlı IP kilidi kaldırıldı.");
+            admin.sendMessage(com.rankauth.util.ColorUtil.translate("&#FFB6C1" + target.getName() + " için kayıtlı IP kilidi kaldırıldı."));
         }));
     }
 
     public SessionManager getSessions() {
         return sessions;
     }
-                        }
-                               
+    }
+        
