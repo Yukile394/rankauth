@@ -19,10 +19,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: bash ./gradlew build --no-daemon
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
