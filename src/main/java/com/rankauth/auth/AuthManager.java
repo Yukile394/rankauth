@@ -6,7 +6,6 @@ import com.rankauth.email.EmailService;
 import com.rankauth.hub.HubIntegration;
 import com.rankauth.model.OpIpRecord;
 import com.rankauth.model.PlayerAccount;
-import com.rankauth.security.CodeGenerator;
 import com.rankauth.security.PasswordUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,12 +16,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 public final class AuthManager {
-
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final JavaPlugin plugin;
     private final ConfigManager config;
@@ -179,7 +174,7 @@ public final class AuthManager {
                 });
     }
 
-    /** /register <şifre> <email> — validates, hashes, sends the verification code, moves to AWAITING_CODE. */
+    /** /register <şifre> <email> — validates the password, hashes it, and registers immediately. No email is sent. */
     public void handleRegisterCommand(Player player, String password, String emailAddress) {
         PlayerSession session = sessions.get(player.getUniqueId());
         if (session == null || session.stage == AuthStage.AWAITING_LOGIN || session.stage == AuthStage.AUTHENTICATED) {
@@ -191,57 +186,10 @@ public final class AuthManager {
             player.sendMessage(config.message("weak-password"));
             return;
         }
-        if (!EMAIL_PATTERN.matcher(emailAddress).matches()) {
-            player.sendMessage(config.message("invalid-email"));
-            return;
-        }
 
         session.pendingPasswordHash = PasswordUtil.hash(password);
         session.pendingEmail = emailAddress;
-
-        String code = CodeGenerator.generateNumericCode(config.verificationCodeLength());
-        String codeHash = CodeGenerator.hashCode(code);
-        long expiresAt = System.currentTimeMillis() + (config.verificationExpirationSeconds() * 1000L);
-
-        db.storeVerificationCode(player.getUniqueId(), codeHash, emailAddress, expiresAt)
-                .thenCompose(v -> email.sendVerificationCode(emailAddress, code))
-                .whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
-                    if (!player.isOnline()) return;
-                    if (err != null) {
-                        player.sendMessage(config.message("email-send-failed"));
-                        return;
-                    }
-                    session.stage = AuthStage.AWAITING_CODE;
-                    player.sendMessage(config.message("verification-sent"));
-                    player.sendMessage(config.message("code-prompt"));
-                }));
-    }
-
-    /** /kod <kod> — verifies the code that was emailed and finalizes registration. */
-    public void handleKodCommand(Player player, String code) {
-        PlayerSession session = sessions.get(player.getUniqueId());
-        if (session == null || session.stage != AuthStage.AWAITING_CODE) {
-            player.sendMessage(config.message("need-register"));
-            return;
-        }
-        db.getVerificationEntry(player.getUniqueId()).whenComplete((entryOpt, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
-            if (!player.isOnline()) return;
-            if (err != null || entryOpt.isEmpty()) {
-                player.sendMessage(config.message("wrong-code"));
-                return;
-            }
-            DatabaseManager.VerificationEntry entry = entryOpt.get();
-            if (System.currentTimeMillis() > entry.expiresAt) {
-                player.sendMessage(config.message("code-expired"));
-                session.stage = AuthStage.AWAITING_REGISTER;
-                return;
-            }
-            if (!CodeGenerator.matches(code, entry.codeHash)) {
-                player.sendMessage(config.message("wrong-code"));
-                return;
-            }
-            completeRegistration(player, session);
-        }));
+        completeRegistration(player, session);
     }
 
     private void completeRegistration(Player player, PlayerSession session) {
@@ -251,7 +199,6 @@ public final class AuthManager {
                 resolvePlayerIp(player), System.currentTimeMillis() + (config.sessionDurationSeconds() * 1000L));
 
         db.createAccount(account)
-                .thenCompose(v -> db.deleteVerificationEntry(player.getUniqueId()))
                 .whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) return;
                     if (err != null) {
@@ -373,4 +320,4 @@ public final class AuthManager {
     public SessionManager getSessions() {
         return sessions;
     }
-                                              }
+                }
