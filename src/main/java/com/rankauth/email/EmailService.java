@@ -1,8 +1,8 @@
 package com.rankauth.email;
 
 import com.rankauth.config.ConfigManager;
+import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
-import jakarta.mail.MessagingException;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
@@ -27,6 +27,22 @@ public final class EmailService {
         this.config = config;
     }
 
+    /** Named (not anonymous) Authenticator — avoids shadowJar issues with synthetic inner classes. */
+    private static final class SmtpAuthenticator extends Authenticator {
+        private final String username;
+        private final String password;
+
+        SmtpAuthenticator(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(username, password);
+        }
+    }
+
     /** Sends the verification code email asynchronously. Never logs the code or the SMTP password. */
     public CompletableFuture<Void> sendVerificationCode(String toAddress, String code) {
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -41,12 +57,7 @@ public final class EmailService {
                 String smtpUser = config.smtpUsername();
                 String smtpPass = config.smtpPassword();
 
-                Session session = Session.getInstance(props, new jakarta.mail.Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(smtpUser, smtpPass);
-                    }
-                });
+                Session session = Session.getInstance(props, new SmtpAuthenticator(smtpUser, smtpPass));
 
                 MimeMessage message = new MimeMessage(session);
                 message.setFrom(new InternetAddress(config.smtpFromAddress(), config.smtpFromName()));
