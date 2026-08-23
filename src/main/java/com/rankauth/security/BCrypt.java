@@ -294,8 +294,27 @@ public final class BCrypt {
         return rs.toString();
     }
 
+    /**
+     * Plain `new SecureRandom()` picks the platform default provider, which on
+     * Linux (and most Docker/Android/PojavLauncher-style hosts) is often a
+     * /dev/random-backed NativePRNG. When the box is low on entropy that call
+     * blocks indefinitely on nextBytes() — exactly the "password over N chars
+     * = no response at all" symptom, since gensalt() simply never returns.
+     * Prefer a non-blocking algorithm and fall back gracefully if unavailable.
+     */
+    private static SecureRandom nonBlockingRandom() {
+        try {
+            return SecureRandom.getInstance("NativePRNGNonBlocking");
+        } catch (Exception ignored) {
+            // Not every JVM exposes NativePRNGNonBlocking (e.g. Windows). The
+            // JDK default SecureRandom() there doesn't have the /dev/random
+            // blocking issue, so it's a safe fallback.
+            return new SecureRandom();
+        }
+    }
+
     public static String gensalt() {
-        return gensalt(GENSALT_DEFAULT_LOG2_ROUNDS, new SecureRandom());
+        return gensalt(GENSALT_DEFAULT_LOG2_ROUNDS, nonBlockingRandom());
     }
 
     public static String hashpw(String password) {
@@ -318,4 +337,5 @@ public final class BCrypt {
             return false;
         }
     }
-}
+        }
+        
