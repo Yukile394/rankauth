@@ -18,7 +18,7 @@ import java.util.Set;
 public final class RestrictionListener implements Listener {
 
     private static final Set<String> ALLOWED_COMMANDS = Set.of(
-            "/login", "/register"
+            "/login", "/register", "/kod"
     );
 
     private final SessionManager sessions;
