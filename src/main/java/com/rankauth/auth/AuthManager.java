@@ -42,11 +42,6 @@ public final class AuthManager {
         this.hub = hub;
     }
 
-    // ------------------------------------------------------------------
-    // Join handling
-    // ------------------------------------------------------------------
-
-    /** Called on join once the player's account lookup returns. Decides register vs login flow. */
     public void beginAuthFlow(Player player) {
         db.getAccount(player.getUniqueId()).whenComplete((accountOpt, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
@@ -59,7 +54,6 @@ public final class AuthManager {
             com.rankauth.util.TabVisibility.hideFromEveryone(plugin, player);
 
             if (accountOpt.isEmpty()) {
-                // Decision order step 2: no account → registration flow.
                 PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_PASSWORD);
                 session.stage = AuthStage.AWAITING_PASSWORD;
                 session.safeLocation = safeLoc;
@@ -76,11 +70,9 @@ public final class AuthManager {
                     && account.lastIp.equals(currentIp);
 
             if (sessionValid) {
-                // Decision order steps 3+4: valid trusted session on the same IP.
                 PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_LOGIN);
                 session.safeLocation = safeLoc;
                 if (config.opSecurityEnabled() && player.isOp()) {
-                    // Decision order step 5: OP IP lock still applies independently of session trust.
                     enforceOpIpLock(player, session, account);
                 } else {
                     finalizeLogin(player, session, account);
@@ -88,7 +80,6 @@ public final class AuthManager {
                 return;
             }
 
-            // No valid session (or different IP, or session expired) → normal /login prompt.
             PlayerSession session = sessions.getOrCreate(player.getUniqueId(), AuthStage.AWAITING_LOGIN);
             session.stage = AuthStage.AWAITING_LOGIN;
             session.safeLocation = safeLoc;
@@ -99,9 +90,9 @@ public final class AuthManager {
 
     private Location buildSafeLocation(Player player) {
         World world = player.getWorld();
-        // Suspend the player well above any terrain at a fixed platform-independent point
-        // so they visually float without ever reaching fall damage, without altering the world.
-        return new Location(world, player.getLocation().getX(), 320, player.getLocation().getZ());
+        double safeY = (world.getEnvironment() == World.Environment.NETHER) ? 120 : 320;
+        safeY = Math.min(safeY, world.getMaxHeight() - 5);
+        return new Location(world, player.getLocation().getX(), safeY, player.getLocation().getZ());
     }
 
     private void startTimeout(Player player, PlayerSession session, int seconds) {
@@ -119,11 +110,6 @@ public final class AuthManager {
                 });
     }
 
-    // ------------------------------------------------------------------
-    // Chat-driven registration flow
-    // ------------------------------------------------------------------
-
-    /** Returns true if the chat message was consumed by the auth flow (i.e. should not reach normal chat). */
     public boolean handleChatInput(Player player, String message) {
         PlayerSession session = sessions.get(player.getUniqueId());
         if (session == null || session.stage == AuthStage.AUTHENTICATED) {
@@ -136,7 +122,7 @@ public final class AuthManager {
             case AWAITING_EMAIL -> handleEmailEntry(player, session, message);
             case AWAITING_CODE -> handleCodeEntry(player, session, message);
             case AWAITING_LOGIN -> player.sendMessage(ChatColor.YELLOW + "Giriş yapmak için: /login <şifre>");
-            default -> { /* AUTHENTICATED already excluded above */ }
+            default -> {}
         }
         return true;
     }
@@ -229,10 +215,6 @@ public final class AuthManager {
                 }));
     }
 
-    // ------------------------------------------------------------------
-    // /register command (alternate entry point per spec: /register <pw> <pw>)
-    // ------------------------------------------------------------------
-
     public void handleRegisterCommand(Player player, String password1, String password2) {
         PlayerSession session = sessions.get(player.getUniqueId());
         if (session == null || session.stage == AuthStage.AWAITING_LOGIN || session.stage == AuthStage.AUTHENTICATED) {
@@ -252,10 +234,6 @@ public final class AuthManager {
         session.stage = AuthStage.AWAITING_EMAIL;
         player.sendMessage(ChatColor.YELLOW + "Güvenlik için e-posta adresinizi girin:");
     }
-
-    // ------------------------------------------------------------------
-    // /login command
-    // ------------------------------------------------------------------
 
     public void handleLoginCommand(Player player, String password) {
         PlayerSession session = sessions.get(player.getUniqueId());
@@ -279,8 +257,6 @@ public final class AuthManager {
                 registerFailedAttempt(player, session);
                 return;
             }
-
-            // Password correct — now enforce OP IP lock if applicable.
             if (config.opSecurityEnabled() && player.isOp()) {
                 enforceOpIpLock(player, session, account);
             } else {
@@ -301,10 +277,6 @@ public final class AuthManager {
     }
 
     private String resolvePlayerIp(Player player) {
-        // If behind a proxy with player-info-forwarding configured, Paper's
-        // player.getAddress() already reflects the real client IP — no extra
-        // header parsing is done here, since untrusted forwarding headers
-        // must never be trusted directly.
         if (player.getAddress() == null) return "unknown";
         return player.getAddress().getAddress().getHostAddress();
     }
@@ -320,7 +292,6 @@ public final class AuthManager {
             }
             Optional<OpIpRecord> record = recordOpt;
             if (record.isEmpty()) {
-                // First successful OP login after install / IP removal: trust this IP going forward.
                 db.upsertOpIpRecord(player.getUniqueId(), player.getName(), currentIp);
                 finalizeLogin(player, session, account);
                 return;
@@ -351,10 +322,6 @@ public final class AuthManager {
         hub.sendToHub(player);
     }
 
-    // ------------------------------------------------------------------
-    // /opsistemikaldir <player>
-    // ------------------------------------------------------------------
-
     public void removeOpIpLock(org.bukkit.command.CommandSender admin, Player target) {
         db.removeOpIpRecord(target.getUniqueId()).whenComplete((v, err) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (err != null) {
@@ -368,4 +335,4 @@ public final class AuthManager {
     public SessionManager getSessions() {
         return sessions;
     }
-}
+    }
