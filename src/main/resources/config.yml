@@ -34,7 +34,7 @@ smtp:
   from-name: RankAuth
   subject: "Doğrulama Kodu"
 
-# (bunu yaparken çok zorlandimnamk şeyi neyse devam)Kayıt/giriş ekranında oynayan sakinleştirici arkaplan müziği.
+# Kayıt/giriş ekranında oynayan sakinleştirici arkaplan müziği.
 # Oyuncu kayıt/giriş olana kadar döngüde çalar, authenticated olunca durur.
 music:
   enabled: true
@@ -54,10 +54,8 @@ welcome:
     - "&#FFA500         SILVERA SUNUCUSUNA HOŞ GELDİN"
     - ""
     - "&#FFFFFFBuraya ilk defa geliyorsun, önce hesabını oluşturman gerekiyor."
-    - "&#FFB6C1- &#FFFFFFAşağıya bir şifre yaz ve sohbete gönder."
-    - "&#FFB6C1- &#FFFFFFAynı şifreyi tekrar yazarak onayla."
-    - "&#FFB6C1- &#FFFFFFGeçerli bir e-posta adresi gir."
-    - "&#FFB6C1- &#FFFFFFE-postana gelen 6 haneli kodu sohbete yaz."
+    - "&#FFB6C1- &#FFFFFF/register <şifre> <email> yaz."
+    - "&#FFB6C1- &#FFFFFFE-postana gelen 6 haneli kodu &#FFB6C1/kod <kod>&#FFFFFF ile gir."
     - ""
     - "&#FFA500Kayıt tamamlanana kadar hareket edemez ve düşemezsin,"
     - "&#FFA500altında görünmez bir koruma bloğu var."
@@ -79,17 +77,16 @@ session:
 # turuncu &#FFA500 (hata/dikkat).
 messages:
   prefix: "&#FFA500Silvera"
-  password-prompt: "&#FFFFFFŞifre belirle:"
-  password-confirm-prompt: "&#FFFFFFŞifrenizi tekrar girin:"
-  email-prompt: "&#FFFFFFGüvenlik için e-posta adresinizi girin:"
-  code-prompt: "&#FFFFFFKodu chat üzerinden girin:"
+  register-prompt: "&#FFFFFFKayıt olmak için: &#FFB6C1/register <şifre> <email>"
+  code-prompt: "&#FFFFFFE-postana gelen kodu girmek için: &#FFB6C1/kod <kod>"
   login-prompt: "&#FFFFFFGiriş yapmak için: &#FFB6C1/login <şifre>"
   register-success: "&#FFB6C1Kayıt başarıyla tamamlandı!"
   register-failed: "&#FFA500Kayıt tamamlanamadı, lütfen tekrar deneyin."
   email-send-failed: "&#FFA500Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin."
-  code-expired: "&#FFA500Doğrulama kodunun süresi doldu. Lütfen tekrar deneyin."
+  code-expired: "&#FFA500Doğrulama kodunun süresi doldu. Lütfen /register komutunu tekrar çalıştır."
   op-check-failed: "&#FFA500Güvenlik kontrolü başarısız oldu, tekrar deneyin."
-  register-usage: "&#FFFFFFKullanım: &#FFB6C1/register <şifre> <şifre>"
+  register-usage: "&#FFFFFFKullanım: &#FFB6C1/register <şifre> <email>"
+  kod-usage: "&#FFFFFFKullanım: &#FFB6C1/kod <kod>"
   login-usage: "&#FFFFFFKullanım: &#FFB6C1/login <şifre>"
   weak-password: "&#FFB6C1Şifreniz çok düşük, en az 8 karakter olmalı."
   password-mismatch: "&#FFB6C1Şifreler eşleşmiyor."
