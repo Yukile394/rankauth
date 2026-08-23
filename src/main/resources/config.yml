@@ -16,13 +16,11 @@ verification:
 
 database:
   type: sqlite
-  # Reserved for future MySQL/MariaDB support.
   mysql:
     host: localhost
     port: 3306
     database: rankauth
     username: rankauth
-    # Prefer environment variable RANKAUTH_DB_PASSWORD over this field.
     password: ""
     use-ssl: false
 
@@ -30,9 +28,6 @@ smtp:
   host: smtp.example.com
   port: 587
   starttls: true
-  # Username/password are read from environment variables first:
-  #   RANKAUTH_SMTP_USERNAME / RANKAUTH_SMTP_PASSWORD
-  # These fields are only a fallback and should be left blank in production.
   username: ""
   password: ""
   from-address: no-reply@example.com
@@ -40,19 +35,16 @@ smtp:
   subject: "Doğrulama Kodu"
 
 hub:
-  # Command executed as the player once registration completes (no leading slash).
   command: "hub"
 
 op-security:
   enabled: true
-  # Trust the proxy's forwarded player IP (set true only if the server sits
-  # behind Velocity/BungeeCord with player-info-forwarding-mode configured).
   behind-proxy: false
 
 session:
-  # Short-lived trusted-session auto-login. Independent from OP IP locking.
   enabled: true
-  duration: 60
+  # Saniye cinsinden. 10800 = 3 saat.
+  duration: 10800
 
 messages:
   prefix: "Silvera"
