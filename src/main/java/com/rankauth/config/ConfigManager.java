@@ -165,12 +165,43 @@ public final class ConfigManager {
     }
 
     public String messagePrefix() {
-        return org.bukkit.ChatColor.translateAlternateColorCodes('&', cfg().getString("messages.prefix", "Silvera"));
+        return com.rankauth.util.ColorUtil.translate(cfg().getString("messages.prefix", "Silvera"));
     }
 
     // ---- messages ----
     public String message(String key) {
         String raw = cfg().getString("messages." + key, key);
-        return ChatColor.translateAlternateColorCodes('&', raw);
+        return com.rankauth.util.ColorUtil.translate(raw);
+    }
+
+    // ---- welcome / info screen (shown on first join, while unregistered) ----
+    public java.util.List<String> welcomeLines() {
+        java.util.List<String> raw = cfg().getStringList("welcome.lines");
+        java.util.List<String> translated = new java.util.ArrayList<>();
+        for (String line : raw) {
+            translated.add(com.rankauth.util.ColorUtil.translate(line));
+        }
+        return translated;
+    }
+
+    // ---- ambient auth music ----
+    public boolean musicEnabled() {
+        return cfg().getBoolean("music.enabled", true);
+    }
+
+    public String musicSound() {
+        return cfg().getString("music.sound", "minecraft:music_disc.cat");
+    }
+
+    public float musicVolume() {
+        return (float) cfg().getDouble("music.volume", 0.6);
+    }
+
+    public float musicPitch() {
+        return (float) cfg().getDouble("music.pitch", 1.0);
+    }
+
+    public int musicLoopSeconds() {
+        return cfg().getInt("music.loop-seconds", 185);
     }
 }
