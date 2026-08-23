@@ -63,6 +63,8 @@ public final class PlayerConnectionListener implements Listener {
         // persisted account row (including the short-lived trusted session fields
         // written at login) is untouched. Whether a returning player must /login
         // again is decided entirely by AuthManager#beginAuthFlow on next join.
+        // Also clears any leftover anti-fall barrier block from the auth cage.
+        authManager.handleQuit(event.getPlayer());
         sessions.remove(event.getPlayer().getUniqueId());
     }
 }
