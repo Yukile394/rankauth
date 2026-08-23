@@ -21,6 +21,14 @@ public final class PlayerSession {
     public volatile Object bossBar; // org.bukkit.boss.BossBar, kept as Object to avoid import cycles here
     public volatile int secondsRemaining;
 
+    // Anti-fall protection: barrier block placed beneath safeLocation while
+    // unauthenticated, and the original block type there so it can be restored.
+    public volatile Location barrierLocation;
+    public volatile org.bukkit.Material barrierPreviousType;
+
+    // Calming ambient music looped in the background until authentication completes.
+    public volatile BukkitTask musicTask;
+
     // Failed login rate limiting
     public volatile int failedAttempts;
     public volatile long lockedUntil;
