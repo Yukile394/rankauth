@@ -46,7 +46,7 @@ public final class RankAuthPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this, authManager, sessionManager, configManager), this);
         getServer().getPluginManager().registerEvents(new RestrictionListener(sessionManager, configManager), this);
-        getServer().getPluginManager().registerEvents(new ChatListener(authManager, sessionManager), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(this, authManager, sessionManager), this);
 
         getCommand("register").setExecutor(new RegisterCommand(authManager, configManager));
         getCommand("login").setExecutor(new LoginCommand(authManager, configManager));
