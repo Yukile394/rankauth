@@ -49,6 +49,17 @@ public final class PlayerConnectionListener implements Listener {
         }
     }
 
+    /**
+     * Suppresses join messages/broadcasts from other plugins (e.g. "Player joined
+     * the server", vanilla/other-plugin welcome text) so only RankAuth's own
+     * messages appear in chat. Runs at HIGHEST so it overrides whatever message
+     * earlier-priority listeners (NORMAL/HIGH) may have set.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onJoinMessage(PlayerJoinEvent event) {
+        event.setJoinMessage(null);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
