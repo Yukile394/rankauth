@@ -17,20 +17,22 @@ public final class HubIntegration {
         Plugin hubShat = plugin.getServer().getPluginManager().getPlugin("HubShat");
         this.hubShatPresent = hubShat != null && hubShat.isEnabled();
         if (!hubShatPresent) {
-            plugin.getLogger().warning("HubShat not found on this server — players will not be " +
-                    "auto-teleported to Hub after registration. Falling back to no-op (safe default).");
+            plugin.getLogger().info("HubShat bulunamadi — kayit/giris sonrasi oyuncular spawn'a teleport edilecek.");
         }
     }
 
-    /** Sends the player to Hub immediately after registration completes. Safe no-op if HubShat is absent. */
     public void sendToHub(Player player) {
-        if (!hubShatPresent) {
-            return; // Logged once at startup; avoid spamming per-player.
+        if (hubShatPresent) {
+            String command = config.hubCommand();
+            plugin.getServer().getScheduler().runTask(plugin, () ->
+                    plugin.getServer().dispatchCommand(player, command));
+        } else {
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (player.isOnline()) {
+                    player.teleport(player.getWorld().getSpawnLocation());
+                }
+            });
         }
-        String command = config.hubCommand();
-        // Dispatch as the player so HubShat's own permission handling applies normally.
-        plugin.getServer().getScheduler().runTask(plugin, () ->
-                plugin.getServer().dispatchCommand(player, command));
     }
 
     public boolean isHubShatPresent() {
