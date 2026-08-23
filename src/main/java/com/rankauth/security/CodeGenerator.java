@@ -6,7 +6,17 @@ import java.nio.charset.StandardCharsets;
 
 public final class CodeGenerator {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
+    // See BCrypt#nonBlockingRandom — plain `new SecureRandom()` can block for
+    // a long time on entropy-starved hosts. Same fix applied here.
+    private static final SecureRandom RANDOM = createRandom();
+
+    private static SecureRandom createRandom() {
+        try {
+            return SecureRandom.getInstance("NativePRNGNonBlocking");
+        } catch (Exception ignored) {
+            return new SecureRandom();
+        }
+    }
 
     private CodeGenerator() {}
 
