@@ -7,6 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+/** /register <şifre> <email> — şifreyi doğrular, hash'ler, e-postaya kod gönderir. */
 public final class RegisterCommand implements CommandExecutor {
 
     private final AuthManager authManager;
