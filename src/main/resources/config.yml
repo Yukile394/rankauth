@@ -34,7 +34,7 @@ smtp:
   from-name: RankAuth
   subject: "Doğrulama Kodu"
 
-# Kayıt/giriş ekranında oynayan sakinleştirici arkaplan müziği.
+# (bunu yaparken çok zorlandimnamk şeyi neyse devam)Kayıt/giriş ekranında oynayan sakinleştirici arkaplan müziği.
 # Oyuncu kayıt/giriş olana kadar döngüde çalar, authenticated olunca durur.
 music:
   enabled: true
