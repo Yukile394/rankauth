@@ -2,6 +2,7 @@ package com.rankauth;
 
 import com.rankauth.auth.AuthManager;
 import com.rankauth.auth.SessionManager;
+import com.rankauth.command.KodCommand;
 import com.rankauth.command.LoginCommand;
 import com.rankauth.command.OpSistemiKaldirCommand;
 import com.rankauth.command.RankAuthCommand;
@@ -10,7 +11,6 @@ import com.rankauth.config.ConfigManager;
 import com.rankauth.database.DatabaseManager;
 import com.rankauth.email.EmailService;
 import com.rankauth.hub.HubIntegration;
-import com.rankauth.listener.ChatListener;
 import com.rankauth.listener.PlayerConnectionListener;
 import com.rankauth.listener.RestrictionListener;
 import com.rankauth.security.PasswordUtil;
@@ -46,9 +46,9 @@ public final class RankAuthPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this, authManager, sessionManager, configManager), this);
         getServer().getPluginManager().registerEvents(new RestrictionListener(sessionManager, configManager), this);
-        getServer().getPluginManager().registerEvents(new ChatListener(this, authManager, sessionManager), this);
 
         getCommand("register").setExecutor(new RegisterCommand(authManager, configManager));
+        getCommand("kod").setExecutor(new KodCommand(authManager, configManager));
         getCommand("login").setExecutor(new LoginCommand(authManager, configManager));
         getCommand("opsistemikaldir").setExecutor(new OpSistemiKaldirCommand(authManager));
         getCommand("rankauth").setExecutor(new RankAuthCommand(this, configManager));
