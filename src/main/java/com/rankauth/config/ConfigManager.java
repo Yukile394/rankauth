@@ -184,6 +184,31 @@ public final class ConfigManager {
         return translated;
     }
 
+    // ---- login/register titles (shown on the auth screen) ----
+    public String titleMainRaw() {
+        return cfg().getString("titles.auth-main", "&#FFB6C1Silvera");
+    }
+
+    public String loginSubtitleRaw(int attemptsLeft) {
+        String raw = cfg().getString("titles.login-subtitle",
+                "&#FFFFFFGiriş yapmak için &#FFB6C1/login <şifre>&#FFFFFF komutunu kullan. &#FF5555{hak} hakkın kaldı!");
+        return raw.replace("{hak}", String.valueOf(attemptsLeft));
+    }
+
+    public String registerSubtitleRaw() {
+        return cfg().getString("titles.register-subtitle",
+                "&#FFFFFFKayıt olmak için &#FFB6C1/register <şifre> <email>&#FFFFFF komutunu kullan.");
+    }
+
+    public String successTitleRaw() {
+        return cfg().getString("titles.success", "&#90EE90Başarıyla giriş yaptın");
+    }
+
+    // ---- sounds ----
+    public String successSound() {
+        return cfg().getString("sounds.success", "minecraft:entity.player.levelup");
+    }
+
     // ---- ambient auth music ----
     public boolean musicEnabled() {
         return cfg().getBoolean("music.enabled", true);
