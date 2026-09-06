@@ -175,6 +175,19 @@ public final class DatabaseManager {
         });
     }
 
+    /** Case-insensitive check for whether an email is already registered on another account. */
+    public CompletableFuture<Boolean> emailExists(String email) {
+        return supplyAsync(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT 1 FROM players WHERE LOWER(email) = LOWER(?) LIMIT 1")) {
+                ps.setString(1, email);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
+            }
+        });
+    }
+
     public CompletableFuture<Void> updateLastLogin(UUID uuid, long timestamp) {
         return supplyAsync(conn -> {
             try (PreparedStatement ps = conn.prepareStatement(
