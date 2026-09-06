@@ -7,8 +7,10 @@ auth:
   require-uppercase: false
   require-lowercase: false
   require-number: false
-  max-failed-login-attempts: 5
-  failed-login-lockout-seconds: 60
+  # 3 hatalı şifre denemesinden sonra oyuncu sunucudan atılır ve aşağıdaki
+  # süre boyunca (saniye) tekrar giriş yapamaz.
+  max-failed-login-attempts: 3
+  failed-login-lockout-seconds: 300
 
 verification:
   code-length: 6
@@ -60,6 +62,19 @@ welcome:
     - "&#FFA500altında görünmez bir koruma bloğu var."
     - ""
 
+# Kayıt/giriş beklerken oyuncuya gösterilen title/subtitle ekranı (fotoğraftaki
+# kilit ekranına benzer). {hak} = kilitlenmeden önce kalan giriş denemesi sayısı.
+titles:
+  auth-main: "&#FFB6C1Silvera"
+  login-subtitle: "&#FFFFFFGiriş yapmak için &#FFB6C1/login <şifre>&#FFFFFF komutunu kullan. &#FF5555{hak} hakkın kaldı!"
+  register-subtitle: "&#FFFFFFKayıt olmak için &#FFB6C1/register <şifre> <email>&#FFFFFF komutunu kullan."
+  # Kayıt/giriş başarılı olduğunda hub'a atılmadan hemen önce gösterilen title.
+  success: "&#90EE90Başarıyla giriş yaptın"
+
+# Kayıt/giriş başarılı olduğunda çalan ses.
+sounds:
+  success: "minecraft:entity.player.levelup"
+
 hub:
   command: "hub"
 
@@ -92,3 +107,6 @@ messages:
   registration-timeout: "&#FFA500Kayıt süresi doldu. Sunucudan çıkarılıyorsunuz."
   rate-limited: "&#FFA500Çok fazla yanlış deneme. Lütfen biraz sonra tekrar deneyin."
   duplicate-connection: "&#FFA500Bu kullanıcı adı şu anda sunucuda kullanımda."
+  email-taken: "&#FFA500Bu e-posta adresi başka bir hesap tarafından kullanılıyor."
+  login-locked-kick: "&#FF55553 kez hatalı şifre girdiniz.\n&#FFFFFF5 dakika boyunca giriş yapamayacaksınız."
+  login-locked: "&#FF5555Çok fazla hatalı giriş denemesi yaptınız.\n&#FFFFFF{saniye} saniye sonra tekrar deneyebilirsiniz."
