@@ -13,7 +13,20 @@ public final class ColorUtil {
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
+    private static final net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer LEGACY =
+            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection();
+
     private ColorUtil() {
+    }
+
+    /**
+     * Translates '&' / hex color codes and returns a real Adventure Component,
+     * so titles/kick screens actually render the colors instead of showing
+     * literal color-code characters (which display as plain/uncolored text).
+     */
+    public static net.kyori.adventure.text.Component component(String input) {
+        if (input == null) return net.kyori.adventure.text.Component.empty();
+        return LEGACY.deserialize(translate(input));
     }
 
     public static String translate(String input) {
