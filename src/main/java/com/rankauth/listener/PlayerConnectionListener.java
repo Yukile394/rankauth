@@ -37,12 +37,23 @@ public final class PlayerConnectionListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onLogin(PlayerLoginEvent event) {
         Player incoming = event.getPlayer();
+
+        // 3 hatalı /login denemesinden sonra uygulanan 5 dakikalık giriş kilidi —
+        // oyuncu sunucudan atılmış olsa bile süre dolana kadar tekrar giremez.
+        if (authManager.isLoginLocked(incoming.getUniqueId())) {
+            long remaining = authManager.getLoginLockRemainingSeconds(incoming.getUniqueId());
+            String msg = config.message("login-locked").replace("{saniye}", String.valueOf(remaining));
+            event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
+                    com.rankauth.util.ColorUtil.component("[" + config.messagePrefix() + "] " + msg));
+            return;
+        }
+
         for (Player online : Bukkit.getOnlinePlayers()) {
             boolean sameUuid = online.getUniqueId().equals(incoming.getUniqueId());
             boolean sameName = online.getName().equalsIgnoreCase(incoming.getName());
             if (sameUuid || sameName) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER,
-                        net.kyori.adventure.text.Component.text(
+                        com.rankauth.util.ColorUtil.component(
                                 "[" + config.messagePrefix() + "] " + config.message("duplicate-connection")));
                 return;
             }
